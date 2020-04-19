@@ -9,14 +9,14 @@ import Model.CommonFunctions as cf
 
 def main():
 
-    DEBUG_PRINT = True
+    DEBUG_PRINT = False
 
     xRange = [0, math.pi]
     yRange = [0, math.pi]
 
     # Descritize some points in space
     n = 4
-    m = 5
+    m = 4
     x = np.linspace(xRange[0], xRange[1], n)
     y = np.linspace(yRange[0], yRange[1], m)
 
@@ -42,7 +42,7 @@ def main():
             if DEBUG_PRINT: print("value", value)
             BC[key] = value
 
-    cf.getA(mesh, BC, DEBUG_PRINT=True)
+    A = cf.getA(mesh, BC, DEBUG_PRINT=DEBUG_PRINT)
 
 
 if __name__ == "__main__":
