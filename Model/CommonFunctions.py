@@ -1,6 +1,9 @@
-# Micah Church
 import numpy as np
+import random
 
+import Model.WaveFunction as mwf
+
+# Micah Church
 # Setting up Aphi = -E2m/hbar * phi
 # Mesh: the 2d dimensional coordinate system
 # BC is a dictionary with the keys being the coordinates as a tuple and the value being the initial condition
@@ -59,6 +62,32 @@ def getA(mesh, BC, DEBUG_PRINT=False):
     if DEBUG_PRINT: print("A is", a, "b is", b)
 
     return a
+
+# Michael Stien
+
+def prob(Lx,Ly,Nx,Ny,size):
+    data = []
+    Psi = mwf.waveFunction(Lx,Ly,Nx,Ny)
+    for x in range(size):
+        for y in range(size):
+            dx=Lx*float(x)/size
+            dy=Ly*float(y)/size
+            if(random.random()<abs(Psi.calc(dx,dy))):
+               point = (dx,dy)
+               data.append(point)
+    return data
+
+"""Btw Micah the link you provided is for spin our system does not incorporate spin in any way
+    The Pauli Equation would however.
+    I believe that the way to determine what quantum state it is in is to measure the energy in the area and its movement
+    and compare it with known values for the atom you are studying.
+    Using the how to page this is all the function would be.
+"""
+def upSpin(spinState):
+    mag=spinState[0]^2 + spinState[1]^2
+    return spinState[0]/mag
+
+# def 
 
 def plotA(A):
     x = np.arange(0, A.shape[0])

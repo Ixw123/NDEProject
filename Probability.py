@@ -2,6 +2,7 @@
 import numpy
 import matplotlib.pyplot as plt
 import random
+
 def prob(Lx,Ly,Nx,Ny,size):
     data = []
     Psi = waveFunction(Lx,Ly,Nx,Ny)
