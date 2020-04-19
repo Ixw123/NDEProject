@@ -43,11 +43,15 @@ def main():
             BC[key] = value
 
     # A = cf.getA(mesh, BC, DEBUG_PRINT=DEBUG_PRINT)
-    a = np.array([[1.5, 0, 1], [-.5, .5, -.5], [-.5, 0, 0]])
+    # a = np.array([[1.5, 0, 1], [-.5, .5, -.5], [-.5, 0, 0]])
+    a = np.array([[1, 2], [0, 5]], dtype=np.float64)
     eVal, eVec = cf.powerItteration(a, tol=1e-10)
-    # print(ev)
-    v1, v2, v3 = cf.gramSchmidt(a, eVec)
-    print(v1, v2, v3)
+    print(eVal)
+    eVecs = cf.gramSchmidt(a, eVec)
+    # print(v1, v2, v3)
+    # eVals, eVecs = cf.getEigenVectors(a, tol=1e-100, DEBUG_PRINT=False)
+    for i in range(len(eVecs)):
+        print("eigenVector", eVecs[i]/eVecs[i][0])
 
 
 if __name__ == "__main__":

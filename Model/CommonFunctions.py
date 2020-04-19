@@ -90,7 +90,7 @@ def upSpin(spinState):
 def powerItteration(A, tol=1e-5, DEBUG_PRINT=False):
     # Intial itteration vector
     bK = np.zeros((A.shape[1], 2))
-    bK[:, 0] = np.ones(A.shape[1])
+    bK[:, 0] = np.random.rand(A.shape[1])
     # print("Initial", bK[:, 0])
     bK[:, 1] = np.dot(A, bK[:, 0])/np.linalg.norm(np.dot(A, bK[:, 0]))
     # print(np.dot(A, bK[:, 0]), np.linalg.norm(np.dot(A, bK[:, 0])))
@@ -113,8 +113,34 @@ def powerItteration(A, tol=1e-5, DEBUG_PRINT=False):
 
     return eigenVal, eigenVec
 
+# Not really working because it just gets the same values and vectors everytime
+# https://math.stackexchange.com/questions/768882/power-method-for-finding-all-eigenvectors
+def getEigenVectors(A, tol=1e-5, DEBUG_PRINT=False):
+
+    basis = A
+
+    firstEigenVal, firstEigenVec =  powerItteration(basis, tol=tol, DEBUG_PRINT=DEBUG_PRINT)
+
+    eigenVals = [firstEigenVal]
+    eigenVecs = [firstEigenVec]
+
+    for i in range(1, A.shape[0]):
+        basis -= eigenVals[-1] / np.linalg.norm(eigenVecs[-1])**2 * np.outer(eigenVecs[-1], eigenVecs[-1].T)
+        eVal, eVec =  powerItteration(basis, tol=tol, DEBUG_PRINT=DEBUG_PRINT)
+        while np.where(eVec == eigenVecs, True, False).all(axis=1).any():
+            eVal, eVec =  powerItteration(basis, tol=tol, DEBUG_PRINT=DEBUG_PRINT)
+        eigenVals.append(eVal)
+        eigenVecs.append(eVec)
+
+    return eigenVals, eigenVecs
+        
+
+
+# Implement this http://www.robots.ox.ac.uk/~sjrob/Teaching/EngComp/ecl4.pdf
+
 # https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process
 def gramSchmidt(A, eigenVec):
+    # A -= eigenVec[0] / np.linalg.norm(eigenVec)**2 * np.outer(eigenVec, eigenVec.T)
     eigenVecs = [eigenVec]
     for i in range(1, A.shape[0]):
         print("i is", i)
@@ -122,12 +148,15 @@ def gramSchmidt(A, eigenVec):
         sum = 0
         for j in range(i):
             print("j is", j)
-            proj = (np.dot(vec, eigenVecs[j])/np.dot(vec, vec)) * vec
+            proj = (np.dot(vec, eigenVecs[j])/np.dot(eigenVecs[j], eigenVecs[j])) * eigenVecs[j]
             sum += proj
 
+
+        # A -= eigenVec[0] / np.linalg.norm(eigenVec)**2 * np.outer(eigenVec, eigenVec.T)
         eigenVecs.append(vec - sum)
 
     return eigenVecs
+
 
 def plotA(A):
     x = np.arange(0, A.shape[0])
