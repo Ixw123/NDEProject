@@ -47,7 +47,7 @@ def main():
     eVal, eVec = cf.powerItteration(a, tol=1e-10)
     # print(ev)
     v1, v2, v3 = cf.gramSchmidt(a, eVec)
-    print(v1, v2/[v2[0]], v3/[v3[0]])
+    print(v1, v2, v3)
 
 
 if __name__ == "__main__":

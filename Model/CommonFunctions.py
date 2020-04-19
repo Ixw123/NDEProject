@@ -119,14 +119,11 @@ def gramSchmidt(A, eigenVec):
     for i in range(1, A.shape[0]):
         print("i is", i)
         vec = A[:, i]
-        print("vec is", vec)
         sum = 0
         for j in range(i):
             print("j is", j)
-            proj = (np.dot(vec, eigenVecs[j])/np.dot(eigenVecs[j], eigenVecs[j])) * eigenVecs[j]
-            print("projection of", vec, eigenVecs[j], "is", proj)
+            proj = (np.dot(vec, eigenVecs[j])/np.dot(vec, vec)) * vec
             sum += proj
-            print("sum is", sum)
 
         eigenVecs.append(vec - sum)
 
