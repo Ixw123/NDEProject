@@ -42,7 +42,12 @@ def main():
             if DEBUG_PRINT: print("value", value)
             BC[key] = value
 
-    A = cf.getA(mesh, BC, DEBUG_PRINT=DEBUG_PRINT)
+    # A = cf.getA(mesh, BC, DEBUG_PRINT=DEBUG_PRINT)
+    a = np.array([[1.5, 0, 1], [-.5, .5, -.5], [-.5, 0, 0]])
+    eVal, eVec = cf.powerItteration(a, tol=1e-10)
+    # print(ev)
+    v1, v2, v3 = cf.gramSchmidt(a, eVec)
+    print(v1, v2/[v2[0]], v3/[v3[0]])
 
 
 if __name__ == "__main__":
