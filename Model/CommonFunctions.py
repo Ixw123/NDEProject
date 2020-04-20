@@ -11,7 +11,6 @@ import Model.WaveFunction as mwf
 # Think of a better way to determine E and V
 def numerov(start, end, y0, inputs, a=3, m=1, hBar=1, E=.5):
     outputs = [*y0]
-    print(outputs)
     # dT <= dX. dY
     h = inputs[1] - inputs[0]
     # define potentials
@@ -26,9 +25,6 @@ def numerov(start, end, y0, inputs, a=3, m=1, hBar=1, E=.5):
     for i in range(k.shape[0]):
         k[i] = 2*m*(E-V(inputs[i], a))/hBar**2
 
-    
-    # outputs = [y0]
-    print(outputs)
     for i in range(2, inputs.shape[0]):
         # g_n = g(x_n) = v[x_n]
         # y_n = psi[n]
@@ -50,59 +46,37 @@ def numerov(start, end, y0, inputs, a=3, m=1, hBar=1, E=.5):
 # Setting up Apsi = -E2m/hbar * psi
 # Mesh: the 2d dimensional coordinate system
 # BC is a dictionary with the keys being the coordinates as a tuple and the value being the initial condition
-def getA(mesh, BC, DEBUG_PRINT=False):
+def getSpatialDescritization(mesh, BC, DEBUG_PRINT=False):
     boundryCoords = [list(k) for k in BC.keys()]
-    # if DEBUG_PRINT: print("boundryCoords", boundryCoords)
-    # if DEBUG_PRINT: print(mesh.shape[1], mesh.shape[2], len(list(BC.keys())))
     unknowns = mesh.shape[1] * mesh.shape[2] - len(list(BC.keys()))
-    # if DEBUG_PRINT: print(unknowns)
     a = np.zeros((unknowns, unknowns))
     b = np.zeros((unknowns, 1))
-    # if DEBUG_PRINT: print("a shape", a.shape)
-    # for k,v in BC.items():
-    #     if DEBUG_PRINT: print(k)
-    #     a[k[0], k[1]] = v
     # -1* a = a
     # u = [u11, u12 ..., u21, u22, ... un-1, 1, un-1, 2, ... un, 1, un, 2, ...]
-    # inds = np.arange(0, unknowns)
     psiCnt = 0
-    # if DEBUG_PRINT: print("Number of variables",mesh.shape[2] - 2)
 
     points = {}
     for i in range(1, mesh.shape[1] - 1):
-        # if DEBUG_PRINT: print("i is", i)
         for j in range(1, mesh.shape[2] - 1):
             if tuple([i, j]) not in list(points.keys()):
                 points[tuple([i, j])] = psiCnt
             psiCnt += 1
 
     psiCnt = 0
-    # if DEBUG_PRINT: print(a)
     for i in range(1, mesh.shape[1] - 1):
-        # if DEBUG_PRINT: print("i is", i)
         for j in range(1, mesh.shape[2] - 1):
             a[psiCnt, psiCnt] = 4
             neighbors = np.array([[i - 1, j], [i + 1, j], [i, j + 1], [i, j - 1]])
-            # if DEBUG_PRINT: print(neighbors)
             for n in neighbors:
                 if DEBUG_PRINT: print(n, n[0] in boundryCoords[:][0] and n[1] in boundryCoords[:][1], np.where(boundryCoords == n)[0])
                 # Check if the point is on the boundry
                 if np.where(boundryCoords == n, True, False).all(axis=1).any():
-                    # if DEBUG_PRINT: print("adding", BC[tuple(n)], "to", b[psiCnt])
                     b[psiCnt] += BC[tuple(n)]
                 else:
-                    # if DEBUG_PRINT: print(points[tuple(n)])
                     a[psiCnt, points[tuple(n)]] = -1
             psiCnt += 1
 
-    if DEBUG_PRINT: print("a is", a)
-
-    if DEBUG_PRINT: print((a == a.T).all())
     psi = np.linalg.solve(a, b)
-    print("Solution is", psi)
-    # plotA(a)
-
-    if DEBUG_PRINT: print("A is", a, "b is", b)
 
     return a, psi
 
@@ -130,10 +104,13 @@ def upSpin(spinState):
     return spinState[0]/mag
 
 # Implemented from https://en.wikipedia.org/wiki/Power_iteration
-def powerItteration(A, tol=1e-5, DEBUG_PRINT=False):
+def powerItteration(A, x0=None, tol=1e-5, DEBUG_PRINT=False):
     # Intial itteration vector
     bK = np.zeros((A.shape[1], 2))
-    bK[:, 0] = np.random.rand(A.shape[1])
+    if x0 is None:
+        bK[:, 0] = np.random.rand(A.shape[1])
+    else:
+        bK[:, 0] = x0
     # print("Initial", bK[:, 0])
     bK[:, 1] = np.dot(A, bK[:, 0])
     eigenVals = [np.dot(bK[:, 1], bK[:, 0])/np.dot(bK[:, 0], bK[:, 0])]
@@ -165,8 +142,9 @@ def powerItteration(A, tol=1e-5, DEBUG_PRINT=False):
 def getEigenVectors(A, tol=1e-5, DEBUG_PRINT=False):
 
     basis = A
-
-    firstEigenVal, firstEigenVec =  powerItteration(basis, tol=tol, DEBUG_PRINT=DEBUG_PRINT)
+    initial = np.identity(A.shape[0])
+    x0 = initial[:, 0]
+    firstEigenVal, firstEigenVec =  powerItteration(basis, x0=x0, tol=tol, DEBUG_PRINT=DEBUG_PRINT)
 
     eigenVals = [firstEigenVal]
     eigenVecs = [firstEigenVec]
@@ -176,9 +154,13 @@ def getEigenVectors(A, tol=1e-5, DEBUG_PRINT=False):
         # print(eigenVecs[-1], np.outer(eigenVecs[-1], eigenVecs[-1].T))
         basis -= eigenVals[-1]*np.outer(eigenVecs[-1], eigenVecs[-1].T)
         print("new basis", basis)
-        eVal, eVec =  powerItteration(basis, tol=tol, DEBUG_PRINT=DEBUG_PRINT)
-        while np.where(eVec == eigenVecs, True, False).all(axis=1).any():
-            eVal, eVec =  powerItteration(basis, tol=tol, DEBUG_PRINT=DEBUG_PRINT)
+        x0 = initial[:, 1]
+        eVal, eVec =  powerItteration(basis, x0=x0, tol=tol, DEBUG_PRINT=DEBUG_PRINT)
+        # Check to see if the eigenValues are repeated with a different eigenVector
+        cnt = 0
+        while np.where(eVec == eigenVecs, True, False).all(axis=1).any() or eVal in eigenVals and cnt >= 10000:
+            eVal, eVec =  powerItteration(basis, x0=x0*random(), tol=tol, DEBUG_PRINT=DEBUG_PRINT)
+            cnt += 1
         eigenVals.append(eVal)
         eigenVecs.append(eVec)
 

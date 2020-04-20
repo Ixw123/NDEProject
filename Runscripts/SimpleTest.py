@@ -43,7 +43,10 @@ def main():
             if DEBUG_PRINT: print("value", value)
             BC[key] = value
 
-    A, psi = cf.getA(mesh, BC, DEBUG_PRINT=DEBUG_PRINT)
+    A, psi = cf.getSpatialDescritization(mesh, BC, DEBUG_PRINT=DEBUG_PRINT)
+    for a in A:
+        print(a)
+    # x = input()
 
     # Numerov Test
     # xRange = [-10, 10]
@@ -68,7 +71,7 @@ def main():
     # print(eVal2, eVec2)
     # eVecs = cf.gramSchmidt(a, eVec)
     # # print(v1, v2, v3)
-    eVals, eVecs = cf.getEigenVectors(a, tol=1e-100, DEBUG_PRINT=False)
+    eVals, eVecs = cf.getEigenVectors(A, tol=1e-100, DEBUG_PRINT=False)
     for i in range(len(eVecs)):
         print("eigenValue", eVals[i])
         print("eigenVector", eVecs[i])
