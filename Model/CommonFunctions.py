@@ -57,7 +57,7 @@ def getA(mesh, BC, DEBUG_PRINT=False):
     if DEBUG_PRINT: print((a == a.T).all())
     phi = np.linalg.solve(a, b)
     print("Solution is", phi)
-    plotA(a)
+    # plotA(a)
 
     if DEBUG_PRINT: print("A is", a, "b is", b)
 
@@ -90,7 +90,7 @@ def upSpin(spinState):
 def powerItteration(A, tol=1e-5, DEBUG_PRINT=False):
     # Intial itteration vector
     bK = np.zeros((A.shape[1], 2))
-    bK[:, 0] = np.random.rand(A.shape[1])
+    bK[:, 0] = np.ones(A.shape[1])
     # print("Initial", bK[:, 0])
     bK[:, 1] = np.dot(A, bK[:, 0])/np.linalg.norm(np.dot(A, bK[:, 0]))
     # print(np.dot(A, bK[:, 0]), np.linalg.norm(np.dot(A, bK[:, 0])))
@@ -101,7 +101,8 @@ def powerItteration(A, tol=1e-5, DEBUG_PRINT=False):
     # print("second guess", bK[:, 1])
     cnt = 0
     # print(abs(sum((bK[:, 1] - bK[:, 0])/bK[:, 1])))
-    while abs(sum((bK[:, 1] - bK[:, 0])/bK[:, 1])) > tol or cnt > 10000:
+    if DEBUG_PRINT: print(bK[:, 1])
+    while abs(sum((bK[:, 1] - bK[:, 0]))) > tol or cnt > 10000:
         bK[:, 0] = bK[:, 1]
         bK[:, 1] = np.dot(A, bK[:, 0])/np.linalg.norm(np.dot(A, bK[:, 0]))
         cnt += 1
