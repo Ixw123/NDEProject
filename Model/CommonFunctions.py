@@ -1,10 +1,53 @@
 import numpy as np
 import random
+import matplotlib.pyplot as plt
 
 import Model.WaveFunction as mwf
 
+# Micah Church: Implemented from 
+# https://stackoverflow.com/questions/47463827/solving-1d-schr%C3%B6dinger-equation-with-numerov-method-python
+# and https://en.wikipedia.org/wiki/Numerov%27s_method
+# TODO:
+# Think of a better way to determine E and V
+def numerov(start, end, y0, inputs, a=3, m=1, hBar=1, E=.5):
+    outputs = [*y0]
+    print(outputs)
+    # dT <= dX. dY
+    h = inputs[1] - inputs[0]
+    # define potentials
+    # a = 3
+    # m = 1
+    # hBar = 1
+    k = np.zeros(inputs.shape[0])
+    # Make sure this makes sense
+    def V(x, a):
+        return 1 if np.abs(x) < a else 0
+
+    for i in range(k.shape[0]):
+        k[i] = 2*m*(E-V(inputs[i], a))/hBar**2
+
+    
+    # outputs = [y0]
+    print(outputs)
+    for i in range(2, inputs.shape[0]):
+        # g_n = g(x_n) = v[x_n]
+        # y_n = psi[n]
+        # h = dT
+        # y_n+1(1 + h**2/12*g_n+1) = 2*y_n(1 - 5*h**2/12*g_n) - y_n-1(1 + 12*g_n-1)
+        # y_n term, ie the leading term
+        # 2*y_n(1 - 5*h**2/12*g_n)
+        e = 2*outputs[i-1]*(1 - 5*h**2/12*k[i - 1])
+        # y_n-1 term, ie the tail of the implicit method
+        # adding the h_n+1 term
+        s = 2*outputs[i-2]*(1 + 5*h**2/12*k[i - 2])
+        # divisor term to isolate and add the y_n+1 term
+        d = 1 + h**2/12*k[i]
+        outputs.append((e - s)/d)
+
+    return outputs
+
 # Micah Church
-# Setting up Aphi = -E2m/hbar * phi
+# Setting up Apsi = -E2m/hbar * psi
 # Mesh: the 2d dimensional coordinate system
 # BC is a dictionary with the keys being the coordinates as a tuple and the value being the initial condition
 def getA(mesh, BC, DEBUG_PRINT=False):
@@ -22,7 +65,7 @@ def getA(mesh, BC, DEBUG_PRINT=False):
     # -1* a = a
     # u = [u11, u12 ..., u21, u22, ... un-1, 1, un-1, 2, ... un, 1, un, 2, ...]
     # inds = np.arange(0, unknowns)
-    phiCnt = 0
+    psiCnt = 0
     # if DEBUG_PRINT: print("Number of variables",mesh.shape[2] - 2)
 
     points = {}
@@ -30,38 +73,38 @@ def getA(mesh, BC, DEBUG_PRINT=False):
         # if DEBUG_PRINT: print("i is", i)
         for j in range(1, mesh.shape[2] - 1):
             if tuple([i, j]) not in list(points.keys()):
-                points[tuple([i, j])] = phiCnt
-            phiCnt += 1
+                points[tuple([i, j])] = psiCnt
+            psiCnt += 1
 
-    phiCnt = 0
+    psiCnt = 0
     # if DEBUG_PRINT: print(a)
     for i in range(1, mesh.shape[1] - 1):
         # if DEBUG_PRINT: print("i is", i)
         for j in range(1, mesh.shape[2] - 1):
-            a[phiCnt, phiCnt] = 4
+            a[psiCnt, psiCnt] = 4
             neighbors = np.array([[i - 1, j], [i + 1, j], [i, j + 1], [i, j - 1]])
             # if DEBUG_PRINT: print(neighbors)
             for n in neighbors:
                 if DEBUG_PRINT: print(n, n[0] in boundryCoords[:][0] and n[1] in boundryCoords[:][1], np.where(boundryCoords == n)[0])
                 # Check if the point is on the boundry
                 if np.where(boundryCoords == n, True, False).all(axis=1).any():
-                    # if DEBUG_PRINT: print("adding", BC[tuple(n)], "to", b[phiCnt])
-                    b[phiCnt] += BC[tuple(n)]
+                    # if DEBUG_PRINT: print("adding", BC[tuple(n)], "to", b[psiCnt])
+                    b[psiCnt] += BC[tuple(n)]
                 else:
                     # if DEBUG_PRINT: print(points[tuple(n)])
-                    a[phiCnt, points[tuple(n)]] = -1
-            phiCnt += 1
+                    a[psiCnt, points[tuple(n)]] = -1
+            psiCnt += 1
 
     if DEBUG_PRINT: print("a is", a)
 
     if DEBUG_PRINT: print((a == a.T).all())
-    phi = np.linalg.solve(a, b)
-    print("Solution is", phi)
+    psi = np.linalg.solve(a, b)
+    print("Solution is", psi)
     # plotA(a)
 
     if DEBUG_PRINT: print("A is", a, "b is", b)
 
-    return a
+    return a, psi
 
 # Michael Stien
 def prob(Lx,Ly,Nx,Ny,size):
@@ -90,27 +133,30 @@ def upSpin(spinState):
 def powerItteration(A, tol=1e-5, DEBUG_PRINT=False):
     # Intial itteration vector
     bK = np.zeros((A.shape[1], 2))
-    bK[:, 0] = np.ones(A.shape[1])
+    bK[:, 0] = np.random.rand(A.shape[1])
     # print("Initial", bK[:, 0])
-    bK[:, 1] = np.dot(A, bK[:, 0])/np.linalg.norm(np.dot(A, bK[:, 0]))
+    bK[:, 1] = np.dot(A, bK[:, 0])
+    eigenVals = [np.dot(bK[:, 1], bK[:, 0])/np.dot(bK[:, 0], bK[:, 0])]
     # print(np.dot(A, bK[:, 0]), np.linalg.norm(np.dot(A, bK[:, 0])))
     # print("first guess", bK[:, 1])
     # print("first eigenvalue", bK[0, 1], "eigenVector", bK[:, 1]/ bK[0, 1])
     bK[:, 0] = bK[:, 1]
-    bK[:, 1] = np.dot(A, bK[:, 0])/np.linalg.norm(np.dot(A, bK[:, 0]))
-    # print("second guess", bK[:, 1])
+    bK[:, 1] = np.dot(A, bK[:, 0])
+    eigenVals.append(np.dot(bK[:, 1], bK[:, 0])/np.dot(bK[:, 0], bK[:, 0]))
+    # print("eigenVals", eigenVals)
     cnt = 0
     # print(abs(sum((bK[:, 1] - bK[:, 0])/bK[:, 1])))
-    if DEBUG_PRINT: print(bK[:, 1])
-    while abs(sum((bK[:, 1] - bK[:, 0]))) > tol or cnt > 10000:
+    # if DEBUG_PRINT: print(bK[:, 1])
+    while abs(np.array(eigenVals[-1]) - np.array(eigenVals[-2])) > tol or cnt > 10000:
         bK[:, 0] = bK[:, 1]
-        bK[:, 1] = np.dot(A, bK[:, 0])/np.linalg.norm(np.dot(A, bK[:, 0]))
+        bK[:, 1] = np.dot(A, bK[:, 0])
+        eigenVals.append([np.dot(bK[:, 1], bK[:, 0])/np.dot(bK[:, 0], bK[:, 0])])
         cnt += 1
 
-    if DEBUG_PRINT: print("final error", abs(sum((bK[:, 1] - bK[:, 0])/bK[:, 1])), "cnt", cnt)
+    # if DEBUG_PRINT: print("final error", abs(sum((bK[:, 1] - bK[:, 0])/bK[:, 1])), "cnt", cnt)
 
-    eigenVal = bK[0, 1]
-    eigenVec = bK[:, 1]/bK[0, 1]
+    eigenVal = eigenVals[-1]
+    eigenVec = bK[:, 1]/np.linalg.norm(bK[:, 1])
 
     return eigenVal, eigenVec
 
@@ -126,7 +172,10 @@ def getEigenVectors(A, tol=1e-5, DEBUG_PRINT=False):
     eigenVecs = [firstEigenVec]
 
     for i in range(1, A.shape[0]):
-        basis -= eigenVals[-1] / np.linalg.norm(eigenVecs[-1])**2 * np.outer(eigenVecs[-1], eigenVecs[-1].T)
+        print("old basis", basis)
+        # print(eigenVecs[-1], np.outer(eigenVecs[-1], eigenVecs[-1].T))
+        basis -= eigenVals[-1]*np.outer(eigenVecs[-1], eigenVecs[-1].T)
+        print("new basis", basis)
         eVal, eVec =  powerItteration(basis, tol=tol, DEBUG_PRINT=DEBUG_PRINT)
         while np.where(eVec == eigenVecs, True, False).all(axis=1).any():
             eVal, eVec =  powerItteration(basis, tol=tol, DEBUG_PRINT=DEBUG_PRINT)
@@ -161,7 +210,18 @@ def gramSchmidt(A, eigenVec):
 
 def plotA(A):
     x = np.arange(0, A.shape[0])
-    yInds = np.arange(0, A.shape[1])
-    y = np.zeros((A.shape[0]))
-    nonZero = np.where(A != 0)
-    print(nonZero)
+    # yInds = np.arange(0, A.shape[1])
+    # y = np.zeros((A.shape[0], A.shape[1]))
+    # print(y.shape)
+    y = []
+    for rInd in range(A.shape[0]):      
+        # values = [i for i in range(A.shape[1]) if A[rInd, i] != 0]
+        outputs = np.where(A[rInd] != 0)[0]
+        # print(values)  
+        y.append(outputs)
+        # print(y[rInd])
+    # print(x.shape, y.shape)
+    # print(y)
+    for xe, ye in zip(x, y):
+        plt.scatter([xe] * len(ye), ye)
+    plt.show()
