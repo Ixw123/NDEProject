@@ -139,6 +139,8 @@ def powerItteration(A, x0=None, tol=1e-5, DEBUG_PRINT=False):
 
 # Not really working because it just gets the same values and vectors everytime
 # https://math.stackexchange.com/questions/768882/power-method-for-finding-all-eigenvectors
+# Implements deflation algortihm for finding eigen values need to check error counts
+# Think of a different method that is more stable
 def getEigenVectors(A, tol=1e-5, DEBUG_PRINT=False):
 
     basis = A

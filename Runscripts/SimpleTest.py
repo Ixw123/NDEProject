@@ -16,8 +16,8 @@ def main():
     yRange = [0, math.pi]
 
     # Descritize some points in space
-    n = 4
-    m = 4
+    n = 10
+    m = 10
     x = np.linspace(xRange[0], xRange[1], n)
     y = np.linspace(yRange[0], yRange[1], m)
 
