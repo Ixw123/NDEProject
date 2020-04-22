@@ -59,15 +59,32 @@ def getQR(A):
     return Q, R
 
 # https://math.la.asu.edu/~gardner/QR.pdf
-def getQREigens(A, tol=1e-5):
+def getQREigens(A, tol=1e-15, cntMax=1e4):
+    if A.shape[0] == 1:
+        raise ValueError("Error the matrix", A, "is a singleton and thus no QR factorization or QR algorithm can be computed!!!!")
+    # print(A.shape)
     cnt = 0
     eigenVecs = np.identity(A.shape[0])
-    while cnt < 1000:
+    # offDiagInds = [[i, j] for i in range(A.shape[0], A.shape[1] if i != j)]
+    offDiagInds = np.array(~np.eye(A.shape[0], dtype=bool))
+    # print(offDiagInds)
+    while abs(sum(A[offDiagInds[:, 0], offDiagInds[:, 1]])) > tol and cnt < cntMax:
         Q, R = getQR(A)
+        # print(Q)
         eigenVecs = np.dot(eigenVecs, Q)
         A = np.dot(R, Q)
         cnt += 1
     # print("Q:", Q, "R:", R, "A:", A, "EigenVecs:", eigenVecs)
+
+    # print(list(set(np.diag(np.round(A, 8)))))
+
+    if len(list(set(np.diag(np.round(A, 8))))) < A.shape[0]:
+        print("A", A)
+        print(Q, Q)
+        print("offDiag sum", abs(sum((A[offDiagInds[:, 0], offDiagInds[:, 1]]))), "cnt", cnt)
+        print("WARNING: Mulitplicity of eigenvalue/s is greater than 1, eigenvectors for that value may be off!!!!")
+
+    print("Off diagonal abs sum is", abs(sum(A[offDiagInds[:, 0], offDiagInds[:, 1]])), "tol is", tol)
 
     return np.diag(A), eigenVecs
 

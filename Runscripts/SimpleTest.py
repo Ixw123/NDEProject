@@ -16,8 +16,8 @@ def main():
     yRange = [0, math.pi]
 
     # Descritize some points in space
-    n = 4
-    m = 3
+    n = 6
+    m = 6
     x = np.linspace(xRange[0], xRange[1], n)
     y = np.linspace(yRange[0], yRange[1], m)
 
@@ -63,16 +63,16 @@ def main():
     # a = np.array([[1, 3], [2, 2]], dtype=np.float64)
     # a = np.array([[3, 4], [4, 0]])
     # a = np.array([[2,-2,18], [2,1,0], [1,2,0]])
-    # a = np.array([[52, 30, 49, 28], [30, 50, 8, 44], [49, 8, 46, 16], [28, 34, 16, 22]])
+    A = np.array([[52, 30, 49, 28], [30, 50, 8, 44], [49, 8, 46, 16], [28, 34, 16, 22]])
     # a = np.array([[2,1], [1,2]])
     print(A)
-    if A.shape[0] != 1:
-        Q, R = cf.getQR(A)
-        eigenVals, eigenVecs = cf.getQREigens(np.dot(Q, R))
-        # print("Q is", Q, "R is", R)
-        # print("Q^-1AQ", np.dot(np.linalg.inv(Q), np.dot(np.dot(Q, R), Q)))
-        print("This", np.dot(Q, R), "should match", A)
-        print(eigenVals, eigenVecs)
+    # A = cf.getHessenBergForm(A)
+    Q, R = cf.getQR(A)
+    eigenVals, eigenVecs = cf.getQREigens(np.dot(Q, R), cntMax=1e5)
+    # print("Q is", Q, "R is", R)
+    # print("Q^-1AQ", np.dot(np.linalg.inv(Q), np.dot(np.dot(Q, R), Q)))
+    print("This", np.dot(Q, R), "should match", A)
+    print(eigenVals, eigenVecs)
     # a = np.array([[1.5, 0, 1], [-.5, .5, -.5], [-.5, 0, 0]])
     # a = np.array([[1, 2], [0, 5]], dtype=np.float64)
     # get dominate eigenvector
