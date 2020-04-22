@@ -8,7 +8,7 @@ import Model.WaveFunction as mwf
 
 # H = I - (2uu^T)/||u||_2^2
 def getHouseHolderMat(u):
-    I = np.identity(u.shape[0])
+    I = np.identity(u.shape[0], dtype=np.float64)
     u2norm = np.linalg.norm(u)
     
     return I - (2*(np.outer(u, u.T)))/u2norm**2
@@ -17,10 +17,10 @@ def getHessenBergForm(A):
     # print(A)
     # Loop through each column
     for i in range(A.shape[0] - 2):
-        a = A[i, :]
+        a = A[i, :].astype(np.float64)
         # print(a)
         # get the magnitude of the a to make the u
-        r = np.zeros(a.shape)
+        r = np.zeros(a.shape, dtype=np.float64)
         r[0] = A[0,0]
         # print(A[i+1][i+1:])
         # print(A[i+1:, 0])
@@ -42,14 +42,14 @@ def getQR(A):
     # loop through the columns
     alpha = 1
     sign = 1 if A[0,0] > 0 else -1 
-    Q = np.identity(A.shape[0])
+    Q = np.identity(A.shape[0], dtype=np.float64)
     for j in range(A.shape[1] - 1):
         a = A[j:, j]
-        e = np.zeros(a.shape[0])
+        e = np.zeros(a.shape[0], dtype=np.float64)
         e[0] = 1
         
         v = a + sign*np.linalg.norm(a)*e
-        H = np.identity(A.shape[0])
+        H = np.identity(A.shape[0], dtype=np.float64)
         H[j:, j:] = getHouseHolderMat(v)
 
         Q = np.dot(Q, H)
@@ -64,12 +64,14 @@ def getQREigens(A, tol=1e-15, cntMax=1e4):
         raise ValueError("Error the matrix", A, "is a singleton and thus no QR factorization or QR algorithm can be computed!!!!")
     # print(A.shape)
     cnt = 0
-    eigenVecs = np.identity(A.shape[0])
+    eigenVecs = np.identity(A.shape[0], dtype=np.float64)
     # offDiagInds = [[i, j] for i in range(A.shape[0], A.shape[1] if i != j)]
     offDiagInds = np.array(~np.eye(A.shape[0], dtype=bool))
     # print(offDiagInds)
     while abs(sum(A[offDiagInds[:, 0], offDiagInds[:, 1]])) > tol and cnt < cntMax:
         Q, R = getQR(A)
+        # Test
+        # Q, R = np.linalg.qr(A)
         # print(Q)
         eigenVecs = np.dot(eigenVecs, Q)
         A = np.dot(R, Q)
@@ -78,7 +80,7 @@ def getQREigens(A, tol=1e-15, cntMax=1e4):
 
     # print(list(set(np.diag(np.round(A, 8)))))
 
-    if len(list(set(np.diag(np.round(A, 8))))) < A.shape[0]:
+    if len(list(set(np.diag(np.round(A, 10))))) < A.shape[0]:
         print("A", A)
         print(Q, Q)
         print("offDiag sum", abs(sum((A[offDiagInds[:, 0], offDiagInds[:, 1]]))), "cnt", cnt)
