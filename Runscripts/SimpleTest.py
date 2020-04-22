@@ -16,8 +16,8 @@ def main():
     yRange = [0, math.pi]
 
     # Descritize some points in space
-    n = 10
-    m = 10
+    n = 4
+    m = 3
     x = np.linspace(xRange[0], xRange[1], n)
     y = np.linspace(yRange[0], yRange[1], m)
 
@@ -42,10 +42,10 @@ def main():
             value = boundryConds[i, 2]
             if DEBUG_PRINT: print("value", value)
             BC[key] = value
-
+    # Get spatial descritization based on Central differences in 2d
     A, psi = cf.getSpatialDescritization(mesh, BC, DEBUG_PRINT=DEBUG_PRINT)
-    for a in A:
-        print(a)
+    # for a in A:
+    #     print(a)
     # x = input()
 
     # Numerov Test
@@ -56,11 +56,23 @@ def main():
     # y = cf.numerov(xRange[0], xRange[1], psi, x)
 
     # Ask Dziubbek about this
-    y = cf.numerov(xRange[0], xRange[1], [0, psi[0]], x)
-    plt.plot(x, y)
-    plt.show()
+    # y = cf.numerov(xRange[0], xRange[1], [0, psi[0]], x)
+    # plt.plot(x, y)
+    # plt.show()
 
-    a = np.array([[1, 3], [2, 2]], dtype=np.float64)
+    # a = np.array([[1, 3], [2, 2]], dtype=np.float64)
+    # a = np.array([[3, 4], [4, 0]])
+    # a = np.array([[2,-2,18], [2,1,0], [1,2,0]])
+    # a = np.array([[52, 30, 49, 28], [30, 50, 8, 44], [49, 8, 46, 16], [28, 34, 16, 22]])
+    # a = np.array([[2,1], [1,2]])
+    print(A)
+    if A.shape[0] != 1:
+        Q, R = cf.getQR(A)
+        eigenVals, eigenVecs = cf.getQREigens(np.dot(Q, R))
+        # print("Q is", Q, "R is", R)
+        # print("Q^-1AQ", np.dot(np.linalg.inv(Q), np.dot(np.dot(Q, R), Q)))
+        print("This", np.dot(Q, R), "should match", A)
+        print(eigenVals, eigenVecs)
     # a = np.array([[1.5, 0, 1], [-.5, .5, -.5], [-.5, 0, 0]])
     # a = np.array([[1, 2], [0, 5]], dtype=np.float64)
     # get dominate eigenvector
@@ -71,10 +83,11 @@ def main():
     # print(eVal2, eVec2)
     # eVecs = cf.gramSchmidt(a, eVec)
     # # print(v1, v2, v3)
-    eVals, eVecs = cf.getEigenVectors(A, tol=1e-100, DEBUG_PRINT=False)
-    for i in range(len(eVecs)):
-        print("eigenValue", eVals[i])
-        print("eigenVector", eVecs[i])
+    # eVals, eVecs = cf.getEigenVectors(A, tol=1e-100, DEBUG_PRINT=False)
+    # for i in range(len(eVecs)):
+    #     # if eVals[i] not np.NaN:
+    #     print("eigenValue", eVals[i])
+    #     print("eigenVector", eVecs[i])
 
 
 if __name__ == "__main__":

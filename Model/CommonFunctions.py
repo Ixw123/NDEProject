@@ -3,6 +3,73 @@ import random
 import matplotlib.pyplot as plt
 
 import Model.WaveFunction as mwf
+# Micah Church
+# Implemented from https://math.la.asu.edu/~gardner/QR.pdf
+
+# H = I - (2uu^T)/||u||_2^2
+def getHouseHolderMat(u):
+    I = np.identity(u.shape[0])
+    u2norm = np.linalg.norm(u)
+    
+    return I - (2*(np.outer(u, u.T)))/u2norm**2
+
+def getHessenBergForm(A):
+    # print(A)
+    # Loop through each column
+    for i in range(A.shape[0] - 2):
+        a = A[i, :]
+        # print(a)
+        # get the magnitude of the a to make the u
+        r = np.zeros(a.shape)
+        r[0] = A[0,0]
+        # print(A[i+1][i+1:])
+        # print(A[i+1:, 0])
+        r[1] = np.linalg.norm(A[i+1:, 0])
+        # print("r", r)
+        u = a - r
+        H = getHouseHolderMat(u)
+        # print(H)
+        A = np.dot(np.dot(H, A), H)
+        # print(A)
+        # R = np.dot(H, A)
+        # print(np.dot(H, A))
+
+    return A
+# Implementation from 
+# https://rpubs.com/aaronsc32/qr-decomposition-householder
+# https://math.la.asu.edu/~gardner/QR.pdf
+def getQR(A):
+    # loop through the columns
+    alpha = 1
+    sign = 1 if A[0,0] > 0 else -1 
+    Q = np.identity(A.shape[0])
+    for j in range(A.shape[1] - 1):
+        a = A[j:, j]
+        e = np.zeros(a.shape[0])
+        e[0] = 1
+        
+        v = a + sign*np.linalg.norm(a)*e
+        H = np.identity(A.shape[0])
+        H[j:, j:] = getHouseHolderMat(v)
+
+        Q = np.dot(Q, H)
+        R = np.dot(H, A)
+        A = R
+
+    return Q, R
+
+# https://math.la.asu.edu/~gardner/QR.pdf
+def getQREigens(A, tol=1e-5):
+    cnt = 0
+    eigenVecs = np.identity(A.shape[0])
+    while cnt < 1000:
+        Q, R = getQR(A)
+        eigenVecs = np.dot(eigenVecs, Q)
+        A = np.dot(R, Q)
+        cnt += 1
+    # print("Q:", Q, "R:", R, "A:", A, "EigenVecs:", eigenVecs)
+
+    return np.diag(A), eigenVecs
 
 # Micah Church: Implemented from 
 # https://stackoverflow.com/questions/47463827/solving-1d-schr%C3%B6dinger-equation-with-numerov-method-python
@@ -46,6 +113,7 @@ def numerov(start, end, y0, inputs, a=3, m=1, hBar=1, E=.5):
 # Setting up Apsi = -E2m/hbar * psi
 # Mesh: the 2d dimensional coordinate system
 # BC is a dictionary with the keys being the coordinates as a tuple and the value being the initial condition
+# Spatial descritization based on central differences method
 def getSpatialDescritization(mesh, BC, DEBUG_PRINT=False):
     boundryCoords = [list(k) for k in BC.keys()]
     unknowns = mesh.shape[1] * mesh.shape[2] - len(list(BC.keys()))
@@ -148,14 +216,16 @@ def getEigenVectors(A, tol=1e-5, DEBUG_PRINT=False):
     x0 = initial[:, 0]
     firstEigenVal, firstEigenVec =  powerItteration(basis, x0=x0, tol=tol, DEBUG_PRINT=DEBUG_PRINT)
 
+    if DEBUG_PRINT: print("First Eigen vectors and value", firstEigenVal, firstEigenVec)
+
     eigenVals = [firstEigenVal]
     eigenVecs = [firstEigenVec]
 
     for i in range(1, A.shape[0]):
-        print("old basis", basis)
+        # print("old basis", basis)
         # print(eigenVecs[-1], np.outer(eigenVecs[-1], eigenVecs[-1].T))
         basis -= eigenVals[-1]*np.outer(eigenVecs[-1], eigenVecs[-1].T)
-        print("new basis", basis)
+        # print("new basis", basis)
         x0 = initial[:, 1]
         eVal, eVec =  powerItteration(basis, x0=x0, tol=tol, DEBUG_PRINT=DEBUG_PRINT)
         # Check to see if the eigenValues are repeated with a different eigenVector
@@ -177,11 +247,11 @@ def gramSchmidt(A, eigenVec):
     # A -= eigenVec[0] / np.linalg.norm(eigenVec)**2 * np.outer(eigenVec, eigenVec.T)
     eigenVecs = [eigenVec]
     for i in range(1, A.shape[0]):
-        print("i is", i)
+        # print("i is", i)
         vec = A[:, i]
         sum = 0
         for j in range(i):
-            print("j is", j)
+            # print("j is", j)
             proj = (np.dot(vec, eigenVecs[j])/np.dot(eigenVecs[j], eigenVecs[j])) * eigenVecs[j]
             sum += proj
 
