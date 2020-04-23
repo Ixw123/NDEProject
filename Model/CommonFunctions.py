@@ -181,32 +181,6 @@ def numerov2(y0, inputs, a=3, m=1, hBar=1, E=.5):
 def getCentralDifferences(mesh, BC, DEBUG_PRINT=False):
     boundryCoords = [list(k) for k in BC.keys()]
     unknowns = mesh.shape[1] * mesh.shape[2] - len(list(BC.keys()))
-    v = np.zeros(unknowns)
-    v[0] = 4
-    v[1:3] = -1
-    a = la.toeplitz(v,v)
-    # print(a)
-    c = np.expand_dims(np.arange((unknowns - 2)/2), -1)
-    # print(c.shape)
-    # print(c)
-    # for k in c:
-    #     print(1 + k*2, 2 + k*2)
-    # print(1 + c*2, 2 + c*2)
-    zeros = np.array([1 + c*2, 2 + c*2]).astype(np.int32)
-    print(zeros.shape)
-    # print(zeros[0, :])
-    a[zeros[0, ...], zeros[1, ...]] = 0
-    a[zeros[1, ...], zeros[0, ...]] = 0
-    # print(a)
-    # print(zeros)
-    # for ind in zeros:
-    #     print(ind)
-    return a
-
-'''
-def getSpatialDescritization(mesh, BC, DEBUG_PRINT=False):
-    boundryCoords = [list(k) for k in BC.keys()]
-    unknowns = mesh.shape[1] * mesh.shape[2] - len(list(BC.keys()))
     a = np.zeros((unknowns, unknowns))
     b = np.zeros((unknowns, 1))
     # -1* a = a
@@ -215,45 +189,11 @@ def getSpatialDescritization(mesh, BC, DEBUG_PRINT=False):
 
     points = {}
     # Loop through via submatrices of 3x3
-    nDiv = int(mesh.shape[1] / 3)
-    mDiv = int(mesh.shape[2] / 3)
-    print("shape", mesh.shape)
-    print("nDiv", nDiv)
-    print("mDiv", mDiv)
-    print("j loop is", mesh.shape[2] - mDiv)
-    print("i loop is", mesh.shape[1] - nDiv)
-    for j in range(1, mesh.shape[2] - mDiv):
-        print("j is", j)
-        for i in range(1, mesh.shape[1] - nDiv):
-            print("i is", i)
+    for i in range(1, mesh.shape[1] - 1):
+        for j in range(1, mesh.shape[2] - 1):
             if tuple([i, j]) not in list(points.keys()):
-                print("adding", i, j, "to points at", psiCnt)
                 points[tuple([i, j])] = psiCnt
                 psiCnt += 1
-
-    print("After initial blocking")
-    for k, v in points.items():
-        print(k, v)
-
-    nMod = (mesh.shape[1] - 1) % 3
-    mMod = (mesh.shape[2] - 1) % 3
-
-    print("nMod", nMod)
-    print("mMod", mMod)
-    print("i loop", nMod)
-    print("j loop", mesh.shape[2] - mMod)
-    # Loop through the remaining values and add to points
-    for i in range(1, nMod):
-        print("i is", i)
-        for j in range(1, mesh.shape[2] - mMod):
-            print("j is", j)
-            print("i ind is now", i + 3*(nDiv - 1), j)
-            if tuple([i + 3*(nDiv - 1), j]) not in list(points.keys()):
-                points[tuple([i + 3*(nDiv - 1), j])] = psiCnt
-                psiCnt += 1
-
-    for k, v in points.items():
-        print(k, v)
 
     psiCnt = 0
     for i in range(1, mesh.shape[1] - 1):
@@ -272,7 +212,6 @@ def getSpatialDescritization(mesh, BC, DEBUG_PRINT=False):
     psi = np.linalg.solve(a, b)
 
     return a, psi
-'''
 
 # Michael Stien
 def prob(Lx,Ly,Nx,Ny,size):
