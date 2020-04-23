@@ -105,6 +105,7 @@ def numerov(start, end, y0, inputs, a=3, m=1, hBar=1, E=.5):
     # hBar = 1
     k = np.zeros(inputs.shape[0])
     # Make sure this makes sense
+    # for simpler use case with known V
     def V(x, a):
         return 1 if np.abs(x) < a else 0
 
@@ -128,6 +129,49 @@ def numerov(start, end, y0, inputs, a=3, m=1, hBar=1, E=.5):
 
     return outputs
 
+# More general numerove Leap frog method
+# based off of: https://math.stackexchange.com/questions/3064879/how-will-i-implement-numerov-method-in-a-numerical-example
+def numerov2(y0, inputs, a=3, m=1, hBar=1, E=.5):
+
+    '''
+        f: the function to integrate
+        x: intial x value
+        inputs: [y, v]
+    '''
+    def getInitialValues(f, x, inputs, dx, itterations):
+        # Apply itterations Kutta4 steps with dx/itterations to the first system
+        # [y', v'] = [v, f(x, y)]
+        y, v = inputs
+        dy = np.zeros_like(y)
+        v0h = np.zeros_like(y)
+        h = dx/itterations
+        # Apply runge-Kutta 4th order itterations times
+        for i in range(itterations):
+            # get all kvs and kys for the runge-kutta of 2 different functions f(x, y) = v and y = v
+            ky1 = v
+            kv1 = f(x, y)
+            ky2 = v + .5*h*kv1
+            kv2 = f(x + .5*h, y + .5*h*ky1)
+            ky3 = v + .5*h*kv2
+            kv3 = f(x + .5*h, y + .5*h*ky2)
+            ky4 = v + h*kv3
+            kv4 = f(x + h, y + h*ky3)
+
+            # y = ((1/6)ky1 + 1/3(ky2) + 1/3(ky3) + 1/6(ky4))
+            dy = (ky1 + 2*(ky2 + ky3) + ky4)/6
+            v0h += dy
+
+            y += h*dy
+            v += (h/6)*(kv1 + 2*(kv2 + kv3) + kv4)
+            x += h
+
+        return y, v0h/itterations
+
+
+    outputs = [*y0]
+
+    h = inputs[1] - inputs[0]
+
 # Micah Church
 # Setting up Apsi = -E2m/hbar * psi
 # Mesh: the 2d dimensional coordinate system
@@ -143,11 +187,46 @@ def getSpatialDescritization(mesh, BC, DEBUG_PRINT=False):
     psiCnt = 0
 
     points = {}
-    for i in range(1, mesh.shape[1] - 1):
-        for j in range(1, mesh.shape[2] - 1):
+    # Loop through via submatrices of 3x3
+    nDiv = int(mesh.shape[1] / 3)
+    mDiv = int(mesh.shape[2] / 3)
+    print("shape", mesh.shape)
+    print("nDiv", nDiv)
+    print("mDiv", mDiv)
+    print("j loop is", mesh.shape[2] - mDiv)
+    print("i loop is", mesh.shape[1] - nDiv)
+    for j in range(1, mesh.shape[2] - mDiv):
+        print("j is", j)
+        for i in range(1, mesh.shape[1] - nDiv):
+            print("i is", i)
             if tuple([i, j]) not in list(points.keys()):
+                print("adding", i, j, "to points at", psiCnt)
                 points[tuple([i, j])] = psiCnt
-            psiCnt += 1
+                psiCnt += 1
+
+    print("After initial blocking")
+    for k, v in points.items():
+        print(k, v)
+
+    nMod = (mesh.shape[1] - 1) % 3
+    mMod = (mesh.shape[2] - 1) % 3
+
+    print("nMod", nMod)
+    print("mMod", mMod)
+    print("i loop", nMod)
+    print("j loop", mesh.shape[2] - mMod)
+    # Loop through the remaining values and add to points
+    for i in range(1, nMod):
+        print("i is", i)
+        for j in range(1, mesh.shape[2] - mMod):
+            print("j is", j)
+            print("i ind is now", i + 3*(nDiv - 1), j)
+            if tuple([i + 3*(nDiv - 1), j]) not in list(points.keys()):
+                points[tuple([i + 3*(nDiv - 1), j])] = psiCnt
+                psiCnt += 1
+
+    for k, v in points.items():
+        print(k, v)
 
     psiCnt = 0
     for i in range(1, mesh.shape[1] - 1):

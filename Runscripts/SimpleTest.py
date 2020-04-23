@@ -16,8 +16,8 @@ def main():
     yRange = [0, math.pi]
 
     # Descritize some points in space
-    n = 6
-    m = 6
+    n = 5
+    m = 5
     x = np.linspace(xRange[0], xRange[1], n)
     y = np.linspace(yRange[0], yRange[1], m)
 
@@ -44,6 +44,10 @@ def main():
             BC[key] = value
     # Get spatial descritization based on Central differences in 2d
     A, psi = cf.getSpatialDescritization(mesh, BC, DEBUG_PRINT=DEBUG_PRINT)
+    for r in A:
+        print(r)
+    # print("a IS", A)
+    cf.plotA(A)
     # for a in A:
     #     print(a)
     # x = input()
