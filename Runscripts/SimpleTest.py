@@ -49,6 +49,16 @@ def main():
         print(r)
     # print("a IS", A)
     cf.plotA(A)
+    def f(x, y):
+        return -math.sin(x)+4*(math.sin(math.sin(x)) -math.sin(y))
+    m = 10
+    dx = .1
+    x, y = cf.numerov2(f, [0.0, 1.0], np.arange(0, 20 +.5 * dx, dx), nPECE=4, itterations=3)
+    for xk,yk in zip(x,y): # [::2*m]: 
+        print ("%15.10f: %15.10f,  %15.10f | %15.10e"%(xk,yk,math.sin(xk), (yk-math.sin(xk))*(10*m)**4))
+    plt.plot(x, y)
+    # plt.plot(x, [])
+    plt.show()
     # for a in A:
     #     print(a)
     # x = input()

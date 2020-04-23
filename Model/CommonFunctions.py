@@ -132,17 +132,20 @@ def numerov(start, end, y0, inputs, a=3, m=1, hBar=1, E=.5):
 
 # More general numerove Leap frog method
 # based off of: https://math.stackexchange.com/questions/3064879/how-will-i-implement-numerov-method-in-a-numerical-example
-def numerov2(y0, inputs, a=3, m=1, hBar=1, E=.5):
+def numerov2(f, y0, inputs, nPECE=1, itterations=1):
 
     '''
         f: the function to integrate
         x: intial x value
-        inputs: [y, v]
+        y0: [y, v]
+        dx: Uniform change in deltaX
+        itterations: Number of times to repeat RK4 approximation
     '''
-    def getInitialValues(f, x, inputs, dx, itterations):
+    def getInitialValues(f, x, y0, dx, itterations):
         # Apply itterations Kutta4 steps with dx/itterations to the first system
         # [y', v'] = [v, f(x, y)]
-        y, v = inputs
+        y, v = y0
+        print("intials", y, v)
         dy = np.zeros_like(y)
         v0h = np.zeros_like(y)
         h = dx/itterations
@@ -168,10 +171,30 @@ def numerov2(y0, inputs, a=3, m=1, hBar=1, E=.5):
 
         return y, v0h/itterations
 
+    # outputs = [*y0]
 
-    outputs = [*y0]
-
+    dx = inputs[1] - inputs[0]
     h = inputs[1] - inputs[0]
+
+    # use v0h for v[k-1/2], v1h for v[k+1/2] where the current step if from k to k+1
+    y1, v0h = getInitialValues(f, inputs[0], y0, dx, itterations)
+    print("initial y", y0[0])
+    outputs = [y0[0], y1]
+
+    # get the first output and the second output of the functions
+    fOut1, fOut2 = f(inputs[0],outputs[0]), f(inputs[1],outputs[1])
+    for i in range(1, inputs.shape[0] - 1):
+        # Use simple Verlet
+        outputs.append(outputs[i] + dx*(v0h + dx*fOut2))
+        for j in range(nPECE):
+            v1h = v0h + dx/12*(f(inputs[i+1],outputs[i+1])+10*fOut2+fOut1)
+            outputs[-1] = outputs[-2] + dx * v1h
+
+        fOut1, fOut2 = fOut2, f(inputs[i + 1], outputs[i + 1])
+        v0h = v1h
+
+    return inputs, outputs
+
 
 # Micah Church
 # Setting up Apsi = -E2m/hbar * psi
@@ -214,6 +237,7 @@ def getCentralDifferences(mesh, BC, DEBUG_PRINT=False):
     return a, psi
 
 # Michael Stien
+# http://www.physics.csbsju.edu/QM/square.07.html
 def prob(Lx,Ly,Nx,Ny,size):
     data = []
     Psi = mwf.waveFunction(Lx,Ly,Nx,Ny)
@@ -232,6 +256,7 @@ def prob(Lx,Ly,Nx,Ny,size):
     and compare it with known values for the atom you are studying.
     Using the how to page this is all the function would be.
 """
+# http://www.physics.csbsju.edu/QM/square.07.html
 def upSpin(spinState):
     mag=spinState[0]^2 + spinState[1]^2
     return spinState[0]/mag
