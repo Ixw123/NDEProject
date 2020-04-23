@@ -24,13 +24,13 @@ kr contains the real portion
 def rungeKuttaStep(A,b,c,h):
     p=1
     kc1= h*(np.matmul(A,p*b))
-    kr1= h*(np.matmul(A,p*c))
+    kr1= -h*(np.matmul(A,p*c))
     kc2= h*(np.matmul(A,p*(b+(.5*kr1))))
-    kr2= h*(np.matmul(A,p*(c-(.5*kc1))))
+    kr2= -h*(np.matmul(A,p*(c+(.5*kc1))))
     kc3= h*(np.matmul(A,p*(b+(.5*kr2))))
-    kr3= h*(np.matmul(A,p*(b-(.5*kc2))))
+    kr3= -h*(np.matmul(A,p*(b+(.5*kc2))))
     kc4= h*(np.matmul(A,p*(b+kr3)))
-    kr4= h*(np.matmul(A,p*(b-kc3)))
+    kr4= -h*(np.matmul(A,p*(b+kc3)))
     real = b + (1/6)*(kr1+2rk2+2kr3+kr4)
     complex = b + (1/6)*(kc1+2kc2+2kc3+kc4)
     return (real,complex)
