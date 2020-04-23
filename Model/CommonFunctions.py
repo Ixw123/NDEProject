@@ -1,6 +1,7 @@
 import numpy as np
 import random
 import matplotlib.pyplot as plt
+import scipy.linalg as la
 
 import Model.WaveFunction as mwf
 # Micah Church
@@ -177,6 +178,32 @@ def numerov2(y0, inputs, a=3, m=1, hBar=1, E=.5):
 # Mesh: the 2d dimensional coordinate system
 # BC is a dictionary with the keys being the coordinates as a tuple and the value being the initial condition
 # Spatial descritization based on central differences method
+def getCentralDifferences(mesh, BC, DEBUG_PRINT=False):
+    boundryCoords = [list(k) for k in BC.keys()]
+    unknowns = mesh.shape[1] * mesh.shape[2] - len(list(BC.keys()))
+    v = np.zeros(unknowns)
+    v[0] = 4
+    v[1:3] = -1
+    a = la.toeplitz(v,v)
+    # print(a)
+    c = np.expand_dims(np.arange((unknowns - 2)/2), -1)
+    # print(c.shape)
+    # print(c)
+    # for k in c:
+    #     print(1 + k*2, 2 + k*2)
+    # print(1 + c*2, 2 + c*2)
+    zeros = np.array([1 + c*2, 2 + c*2]).astype(np.int32)
+    print(zeros.shape)
+    # print(zeros[0, :])
+    a[zeros[0, ...], zeros[1, ...]] = 0
+    a[zeros[1, ...], zeros[0, ...]] = 0
+    # print(a)
+    # print(zeros)
+    # for ind in zeros:
+    #     print(ind)
+    return a
+
+'''
 def getSpatialDescritization(mesh, BC, DEBUG_PRINT=False):
     boundryCoords = [list(k) for k in BC.keys()]
     unknowns = mesh.shape[1] * mesh.shape[2] - len(list(BC.keys()))
@@ -245,6 +272,7 @@ def getSpatialDescritization(mesh, BC, DEBUG_PRINT=False):
     psi = np.linalg.solve(a, b)
 
     return a, psi
+'''
 
 # Michael Stien
 def prob(Lx,Ly,Nx,Ny,size):
