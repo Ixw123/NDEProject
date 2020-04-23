@@ -10,11 +10,11 @@ Todo = Animate
 def rungeKutta(A,b,h,Iterations):
     c = np.zeros(len(b))
     for x in range(Iterations):
-        (b,c)=rungaKuttaStep(A,b,c,h)
+        (b,c)=rungeKuttaStep(A,b,c,h)
     
 """
 Written by Michael Stein
-Solves the RungaKuttaStep step size h for the equation u* = ipAu
+Solves the RungeKuttaStep step size h for the equation u* = ipAu
 Where p is the constant planck/(2pi*m)
 c contains the complex part of the solution
 while b contains the real part.

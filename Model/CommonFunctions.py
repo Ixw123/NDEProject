@@ -82,7 +82,7 @@ def getQREigens(A, tol=1e-15, cntMax=1e4):
     # print(list(set(np.diag(np.round(A, 8)))))
 
     if len(list(set(np.diag(np.round(A, 10))))) < A.shape[0]:
-        print("A", A)
+        print("Eigen value matrix", A)
         print(Q, Q)
         print("offDiag sum", abs(sum((A[offDiagInds[:, 0], offDiagInds[:, 1]]))), "cnt", cnt)
         print("WARNING: Mulitplicity of eigenvalue/s is greater than 1, eigenvectors for that value may be off!!!!")
