@@ -1,6 +1,7 @@
 import numpy as np
 import random
 import matplotlib.pyplot as plt
+import scipy.linalg as la
 
 import Model.WaveFunction as mwf
 # Micah Church
@@ -81,7 +82,7 @@ def getQREigens(A, tol=1e-15, cntMax=1e4):
     # print(list(set(np.diag(np.round(A, 8)))))
 
     if len(list(set(np.diag(np.round(A, 10))))) < A.shape[0]:
-        print("A", A)
+        print("Eigen value matrix", A)
         print(Q, Q)
         print("offDiag sum", abs(sum((A[offDiagInds[:, 0], offDiagInds[:, 1]]))), "cnt", cnt)
         print("WARNING: Mulitplicity of eigenvalue/s is greater than 1, eigenvectors for that value may be off!!!!")
@@ -105,6 +106,7 @@ def numerov(start, end, y0, inputs, a=3, m=1, hBar=1, E=.5):
     # hBar = 1
     k = np.zeros(inputs.shape[0])
     # Make sure this makes sense
+    # for simpler use case with known V
     def V(x, a):
         return 1 if np.abs(x) < a else 0
 
@@ -128,12 +130,78 @@ def numerov(start, end, y0, inputs, a=3, m=1, hBar=1, E=.5):
 
     return outputs
 
+# More general numerove Leap frog method
+# based off of: https://math.stackexchange.com/questions/3064879/how-will-i-implement-numerov-method-in-a-numerical-example
+def numerov2(f, y0, inputs, nPECE=1, itterations=1):
+
+    '''
+        f: the function to integrate
+        x: intial x value
+        y0: [y, v]
+        dx: Uniform change in deltaX
+        itterations: Number of times to repeat RK4 approximation
+    '''
+    def getInitialValues(f, x, y0, dx, itterations):
+        # Apply itterations Kutta4 steps with dx/itterations to the first system
+        # [y', v'] = [v, f(x, y)]
+        y, v = y0
+        print("intials", y, v)
+        dy = np.zeros_like(y)
+        v0h = np.zeros_like(y)
+        h = dx/itterations
+        # Apply runge-Kutta 4th order itterations times
+        for i in range(itterations):
+            # get all kvs and kys for the runge-kutta of 2 different functions f(x, y) = v and y = v
+            ky1 = v
+            kv1 = f(x, y)
+            ky2 = v + .5*h*kv1
+            kv2 = f(x + .5*h, y + .5*h*ky1)
+            ky3 = v + .5*h*kv2
+            kv3 = f(x + .5*h, y + .5*h*ky2)
+            ky4 = v + h*kv3
+            kv4 = f(x + h, y + h*ky3)
+
+            # y = ((1/6)ky1 + 1/3(ky2) + 1/3(ky3) + 1/6(ky4))
+            dy = (ky1 + 2*(ky2 + ky3) + ky4)/6
+            v0h += dy
+
+            y += h*dy
+            v += (h/6)*(kv1 + 2*(kv2 + kv3) + kv4)
+            x += h
+
+        return y, v0h/itterations
+
+    # outputs = [*y0]
+
+    dx = inputs[1] - inputs[0]
+    h = inputs[1] - inputs[0]
+
+    # use v0h for v[k-1/2], v1h for v[k+1/2] where the current step if from k to k+1
+    y1, v0h = getInitialValues(f, inputs[0], y0, dx, itterations)
+    print("initial y", y0[0])
+    outputs = [y0[0], y1]
+
+    # get the first output and the second output of the functions
+    fOut1, fOut2 = f(inputs[0],outputs[0]), f(inputs[1],outputs[1])
+    for i in range(1, inputs.shape[0] - 1):
+        # Use simple Verlet
+        outputs.append(outputs[i] + dx*(v0h + dx*fOut2))
+        for j in range(nPECE):
+            v1h = v0h + dx/12*(f(inputs[i+1],outputs[i+1])+10*fOut2+fOut1)
+            outputs[-1] = outputs[-2] + dx * v1h
+
+        fOut1, fOut2 = fOut2, f(inputs[i + 1], outputs[i + 1])
+        v0h = v1h
+
+    return inputs, outputs
+
+
 # Micah Church
 # Setting up Apsi = -E2m/hbar * psi
 # Mesh: the 2d dimensional coordinate system
 # BC is a dictionary with the keys being the coordinates as a tuple and the value being the initial condition
 # Spatial descritization based on central differences method
-def getSpatialDescritization(mesh, BC, DEBUG_PRINT=False):
+def getCentralDifferences(mesh, BC, DEBUG_PRINT=False):
     boundryCoords = [list(k) for k in BC.keys()]
     unknowns = mesh.shape[1] * mesh.shape[2] - len(list(BC.keys()))
     a = np.zeros((unknowns, unknowns))
@@ -143,11 +211,12 @@ def getSpatialDescritization(mesh, BC, DEBUG_PRINT=False):
     psiCnt = 0
 
     points = {}
+    # Loop through via submatrices of 3x3
     for i in range(1, mesh.shape[1] - 1):
         for j in range(1, mesh.shape[2] - 1):
             if tuple([i, j]) not in list(points.keys()):
                 points[tuple([i, j])] = psiCnt
-            psiCnt += 1
+                psiCnt += 1
 
     psiCnt = 0
     for i in range(1, mesh.shape[1] - 1):
@@ -168,6 +237,7 @@ def getSpatialDescritization(mesh, BC, DEBUG_PRINT=False):
     return a, psi
 
 # Michael Stien
+# http://www.physics.csbsju.edu/QM/square.07.html
 def prob(Lx,Ly,Nx,Ny,size):
     data = []
     Psi = mwf.waveFunction(Lx,Ly,Nx,Ny)
@@ -186,6 +256,7 @@ def prob(Lx,Ly,Nx,Ny,size):
     and compare it with known values for the atom you are studying.
     Using the how to page this is all the function would be.
 """
+# http://www.physics.csbsju.edu/QM/square.07.html
 def upSpin(spinState):
     mag=spinState[0]^2 + spinState[1]^2
     return spinState[0]/mag

@@ -10,10 +10,11 @@ Todo = Animate
 def rungeKutta(A,b,h,Iterations):
     c = np.zeros(len(b))
     for x in range(Iterations):
-        (b,c)=rungaKuttaStep(A,b,c,h)
+        (b,c)=rungeKuttaStep(A,b,c,h)
+
 """
 Written by Michael Stein
-Solves the RungaKuttaStep step size h for the equation u* = ipAu
+Solves the RungeKuttaStep step size h for the equation u* = ipAu
 Where p is the constant planck/(2pi*m)
 c contains the complex part of the solution
 while b contains the real part.
@@ -30,9 +31,9 @@ def rungeKuttaStep(A,b,c,h):
     kc3= h*(np.matmul(A,p*(b+(.5*kr2))))
     kr3= -h*(np.matmul(A,p*(b+(.5*kc2))))
     kc4= h*(np.matmul(A,p*(b+kr3)))
-    kr4= -h*(np.matmul(A,p*(b+kc3)))
-    real = b + (1/6)*(kr1+2rk2+2kr3+kr4)
-    complex = b + (1/6)*(kc1+2kc2+2kc3+kc4)
+    kr4= -h*(np.matmul(A,p*(b-kc3)))
+    real = b + (1/6)*(kr1+2*rk2+2*kr3+kr4)
+    complex = c + (1/6)*(kc1+2*kc2+2*kc3+kc4)
     return (real,complex)
 
 """

@@ -7,6 +7,7 @@ import math
 import matplotlib.pyplot as plt
 
 import Model.CommonFunctions as cf
+import Model.TImeSolution as mt
 
 def main():
 
@@ -16,8 +17,8 @@ def main():
     yRange = [0, math.pi]
 
     # Descritize some points in space
-    n = 6
-    m = 6
+    n = 4
+    m = 4
     x = np.linspace(xRange[0], xRange[1], n)
     y = np.linspace(yRange[0], yRange[1], m)
 
@@ -27,7 +28,7 @@ def main():
     rowRange = np.arange(0, n)
     colRange = np.arange(0, m)
     # boundry values for quantum well [psi(xRange, 0), psi(xRange, m-1), psi(0, yRange), psi(n - 1, yRange)]
-    boundVals = [1, 2, 1, 2]
+    boundVals = [0,0,0,0]
     boundryConds = np.array([[[0]*m, colRange, boundVals[2]], [[n - 1]*m, colRange, boundVals[3]], \
         [rowRange, [0]*n, boundVals[0]], [rowRange, [m - 1]*n, boundVals[1]]])
     # boundryConds = np.reshape(np.array(boundryConds), (4, n, m, 1))
@@ -43,7 +44,22 @@ def main():
             if DEBUG_PRINT: print("value", value)
             BC[key] = value
     # Get spatial descritization based on Central differences in 2d
-    A, psi = cf.getSpatialDescritization(mesh, BC, DEBUG_PRINT=DEBUG_PRINT)
+    A, psi = cf.getCentralDifferences(mesh, BC, DEBUG_PRINT=DEBUG_PRINT)
+    # print(A, psi)
+    # for r in A:
+    #     print(r)
+    # print("a IS", A)
+    # cf.plotA(A)
+    # def f(x, y):
+    #     return -math.sin(x)+4*(math.sin(math.sin(x)) -math.sin(y))
+    # m = 10
+    # dx = .1
+    # x, y = cf.numerov2(f, [0.0, 1.0], np.arange(0, 20 +.5 * dx, dx), nPECE=4, itterations=3)
+    # for xk,yk in zip(x,y): # [::2*m]: 
+    #     print ("%15.10f: %15.10f,  %15.10f | %15.10e"%(xk,yk,math.sin(xk), (yk-math.sin(xk))*(10*m)**4))
+    # plt.plot(x, y)
+    # plt.plot(x, [])
+    # plt.show()
     # for a in A:
     #     print(a)
     # x = input()
@@ -63,18 +79,24 @@ def main():
     # a = np.array([[1, 3], [2, 2]], dtype=np.float64)
     # a = np.array([[3, 4], [4, 0]])
     # a = np.array([[2,-2,18], [2,1,0], [1,2,0]])
-    A = np.array([[52, 30, 49, 28], [30, 50, 8, 44], [49, 8, 46, 16], [28, 34, 16, 22]], dtype=np.float64)
+    # A = np.array([[52, 30, 49, 28], [30, 50, 8, 44], [49, 8, 46, 16], [28, 34, 16, 22]], dtype=np.float64)
     # a = np.array([[2,1], [1,2]])
-    print(A)
-    A = cf.getHessenBergForm(A)
-    Q, R = cf.getQR(A)
+    # print(A)
+    A2 = cf.getHessenBergForm(A)
+    Q, R = cf.getQR(A2)
     eigenVals, eigenVecs = cf.getQREigens(np.dot(Q, R), cntMax=1e5)
-    eVal, eigenVec = np.linalg.eig(A)
+    eVal, eigenVec = np.linalg.eig(A2)
+    print("This")
+    print(eigenVals, eigenVecs)
+    print("should match")
+    print(eVal, eigenVec)
+    h = .001
+    itterations = 1000
+    print(A, A2, A.shape)
+    mt.rungeKutta(A, eigenVecs, h, itterations)
     # print("Q is", Q, "R is", R)
     # print("Q^-1AQ", np.dot(np.linalg.inv(Q), np.dot(np.dot(Q, R), Q)))
-    print("This", np.dot(Q, R), "should match", A)
-    print(eigenVals, eigenVecs)
-    print(eVal, eigenVec)
+    # print("This", np.dot(Q, R), "should match", A)
     # a = np.array([[1.5, 0, 1], [-.5, .5, -.5], [-.5, 0, 0]])
     # a = np.array([[1, 2], [0, 5]], dtype=np.float64)
     # get dominate eigenvector
