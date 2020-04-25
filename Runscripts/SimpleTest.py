@@ -3,11 +3,13 @@
 
 import numpy as np
 import sys
-import math 
+import math
 import matplotlib.pyplot as plt
-
+import matplotlib.animation as animation
 import Model.CommonFunctions as cf
 import Model.TImeSolution as mt
+
+from celluloid import Camera
 
 def main():
 
@@ -55,7 +57,7 @@ def main():
     # m = 10
     # dx = .1
     # x, y = cf.numerov2(f, [0.0, 1.0], np.arange(0, 20 +.5 * dx, dx), nPECE=4, itterations=3)
-    # for xk,yk in zip(x,y): # [::2*m]: 
+    # for xk,yk in zip(x,y): # [::2*m]:
     #     print ("%15.10f: %15.10f,  %15.10f | %15.10e"%(xk,yk,math.sin(xk), (yk-math.sin(xk))*(10*m)**4))
     # plt.plot(x, y)
     # plt.plot(x, [])
@@ -93,7 +95,18 @@ def main():
     h = .001
     itterations = 1000
     print(A, A2, A.shape)
-    mt.rungeKutta(A, eigenVecs, h, itterations)
+    (AnimateR,AnimateC) = mt.rungeKutta(A, eigenVecs, h, itterations)
+    fig,axes = plt.subplots(2)
+    camera = Camera(fig)
+
+    for i in range(len(AnimateR)):
+        s=AnimateR[i]
+        for x in range(n):
+            for y in range(m):
+                plt.scatter(x,y,s=s)
+                camera.snap()
+    camera.animate()
+
     # print("Q is", Q, "R is", R)
     # print("Q^-1AQ", np.dot(np.linalg.inv(Q), np.dot(np.dot(Q, R), Q)))
     # print("This", np.dot(Q, R), "should match", A)

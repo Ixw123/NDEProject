@@ -9,9 +9,12 @@ Todo = Animate
 """
 def rungeKutta(A,b,h,Iterations):
     c = np.zeros(len(b))
+    AnimateR = [b]
+    AnimateC = [c]
     for x in range(Iterations):
         (b,c)=rungeKuttaStep(A,b,c,h)
-
+        Animate.append(b,c)
+    return (AnimateR,AnimateC)
 """
 Written by Michael Stein
 Solves the RungeKuttaStep step size h for the equation u* = ipAu
