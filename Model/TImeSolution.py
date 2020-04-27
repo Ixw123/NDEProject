@@ -8,12 +8,14 @@ b = Eigenvector solution
 Todo = Animate
 """
 def rungeKutta(A,b,h,Iterations):
+
     c = np.zeros(len(b))
     AnimateR = [b]
     AnimateC = [c]
     for x in range(Iterations):
         (b,c)=rungeKuttaStep(A,b,c,h)
-        Animate.append(b,c)
+        AnimateR.append(b)
+        AnimateC.append(c)
     return (AnimateR,AnimateC)
 """
 Written by Michael Stein
@@ -35,7 +37,7 @@ def rungeKuttaStep(A,b,c,h):
     kr3= -h*(np.matmul(A,p*(b+(.5*kc2))))
     kc4= h*(np.matmul(A,p*(b+kr3)))
     kr4= -h*(np.matmul(A,p*(b-kc3)))
-    real = b + (1/6)*(kr1+2*rk2+2*kr3+kr4)
+    real = b + (1/6)*(kr1+2*kr2+2*kr3+kr4)
     complex = c + (1/6)*(kc1+2*kc2+2*kc3+kc4)
     return (real,complex)
 

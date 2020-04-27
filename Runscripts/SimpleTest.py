@@ -7,7 +7,7 @@ import math
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import Model.CommonFunctions as cf
-import Model.TImeSolution as mt
+import Model.TimeSolution as mt
 
 from celluloid import Camera
 
@@ -100,25 +100,25 @@ def main():
     """ Written by Michael Stein plots the probability
      of the real and complex part of the wavefunction for each point on a discretized grid
      onto a scatter plot """
-    (AnimateR,AnimateC) = mt.rungeKutta(A, eigenVecs, h, itterations)
+    (AnimateR,AnimateC) = mt.rungeKutta(A, eigenVecs[0], h, itterations)
     fig,axes = plt.subplots(2)
     camera = Camera(fig)
     x = []
     y = []
-    for x in range(n):
-        for y in range(m):
-            x.append(x)
-            y.append(y)
+    for i in range(n-2):
+        for j in range(m-2):
+            x.append(i)
+            y.append(j)
     for i in range(len(AnimateR)):
         b=AnimateR[i]
-        b = [element * 50 for element in b] #unsure how big to make the points.
+        b = [element * 100 for element in b] #unsure how big to make the points.
         c=AnimateR[i]
-        c = [element * 50 for element in c]
+        c = [element * 100 for element in c]
         axes[0].scatter(x,y,b)
         axes[1].scatter(x,y,c)
         camera.snap()
     camera.animate()
-    
+
 
     # print("Q is", Q, "R is", R)
     # print("Q^-1AQ", np.dot(np.linalg.inv(Q), np.dot(np.dot(Q, R), Q)))
