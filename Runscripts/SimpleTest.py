@@ -96,11 +96,16 @@ def main():
     itterations = 1000
     print(A, A2, A.shape)
 
-
+    print(eigenVecs[0])
     """ Written by Michael Stein plots the probability
      of the real and complex part of the wavefunction for each point on a discretized grid
      onto a scatter plot """
+    print("Entering Animation")
     (AnimateR,AnimateC) = mt.rungeKutta(A, eigenVecs[0], h, itterations)
+    print("Exited Animation")
+    print(len(AnimateR))
+    print(len(AnimateC))
+
     fig,axes = plt.subplots(2)
     camera = Camera(fig)
     x = []
@@ -111,14 +116,15 @@ def main():
             y.append(j)
     for i in range(len(AnimateR)):
         b=AnimateR[i]
-        b = [element * 100 for element in b] #unsure how big to make the points.
-        c=AnimateR[i]
-        c = [element * 100 for element in c]
+        b = [abs(element) * 150 for element in b] #unsure how big to make the points.
+        c=AnimateC[i]
+        c = [abs(element) * 150 for element in c]
+
         axes[0].scatter(x,y,b)
         axes[1].scatter(x,y,c)
         camera.snap()
-    camera.animate()
-
+    animation = camera.animate()
+    animation.save('animation.mp4')
 
     # print("Q is", Q, "R is", R)
     # print("Q^-1AQ", np.dot(np.linalg.inv(Q), np.dot(np.dot(Q, R), Q)))
