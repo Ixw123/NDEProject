@@ -9,7 +9,7 @@ import Model.WaveFunction as mwf
 
 # H = I - (2uu^T)/||u||_2^2
 def getHouseHolderMat(u):
-    I = np.identity(u.shape[0], dtype=np.float64)
+    I = np.identity(u.shape[0], dtype=np.complex)
     u2norm = np.linalg.norm(u)
     
     return I - (2*(np.outer(u, u.T)))/u2norm**2
@@ -18,17 +18,19 @@ def getHessenBergForm(A):
     # print(A)
     # Loop through each column
     for i in range(A.shape[0] - 2):
-        a = A[i, :].astype(np.float64)
+        a = A[i, :].astype(np.complex)
         # print(a)
         # get the magnitude of the a to make the u
-        r = np.zeros(a.shape, dtype=np.float64)
+        r = np.zeros(a.shape, dtype=np.complex)
         r[0] = A[0,0]
         # print(A[i+1][i+1:])
         # print(A[i+1:, 0])
         r[1] = np.linalg.norm(A[i+1:, 0])
         # print("r", r)
         u = a - r
+        # print("u type", u.dtype)
         H = getHouseHolderMat(u)
+        # print("h type", H.dtype)
         # print(H)
         A = np.dot(np.dot(H, A), H)
         # print(A)
@@ -43,14 +45,14 @@ def getQR(A):
     # loop through the columns
     alpha = 1
     sign = 1 if A[0,0] > 0 else -1 
-    Q = np.identity(A.shape[0], dtype=np.float64)
+    Q = np.identity(A.shape[0], dtype=np.complex)
     for j in range(A.shape[1] - 1):
         a = A[j:, j]
-        e = np.zeros(a.shape[0], dtype=np.float64)
+        e = np.zeros(a.shape[0], dtype=np.complex)
         e[0] = 1
         
         v = a + sign*np.linalg.norm(a)*e
-        H = np.identity(A.shape[0], dtype=np.float64)
+        H = np.identity(A.shape[0], dtype=np.complex)
         H[j:, j:] = getHouseHolderMat(v)
 
         Q = np.dot(Q, H)
@@ -61,21 +63,26 @@ def getQR(A):
 
 # https://math.la.asu.edu/~gardner/QR.pdf
 def getQREigens(A, tol=1e-15, cntMax=1e4):
+    A = A.astype(np.complex)
+    # print(A.dtype)
     if A.shape[0] == 1:
         raise ValueError("Error the matrix", A, "is a singleton and thus no QR factorization or QR algorithm can be computed!!!!")
     # print(A.shape)
     cnt = 0
-    eigenVecs = np.identity(A.shape[0], dtype=np.float64)
+    eigenVecs = np.identity(A.shape[0], dtype=np.complex)
     # offDiagInds = [[i, j] for i in range(A.shape[0], A.shape[1] if i != j)]
     offDiagInds = np.array(~np.eye(A.shape[0], dtype=bool))
     # print(offDiagInds)
     while abs(sum(A[offDiagInds[:, 0], offDiagInds[:, 1]])) > tol and cnt < cntMax:
         Q, R = getQR(A)
+        # print("q and r types", Q.dtype, R.dtype)
         # Test
         # Q, R = np.linalg.qr(A)
         # print(Q)
         eigenVecs = np.dot(eigenVecs, Q)
+        # print("eigenvecs type", eigenVecs.dtype)
         A = np.dot(R, Q)
+        # print("A dtype", A.dtype)
         cnt += 1
     # print("Q:", Q, "R:", R, "A:", A, "EigenVecs:", eigenVecs)
 
@@ -217,6 +224,9 @@ def getCentralDifferences(mesh, BC, DEBUG_PRINT=False):
             if tuple([i, j]) not in list(points.keys()):
                 points[tuple([i, j])] = psiCnt
                 psiCnt += 1
+
+    for k,v in points.items():
+        print(k, v )
 
     psiCnt = 0
     for i in range(1, mesh.shape[1] - 1):

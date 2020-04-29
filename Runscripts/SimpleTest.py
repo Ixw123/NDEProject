@@ -19,8 +19,8 @@ def main():
     yRange = [0, math.pi]
 
     # Descritize some points in space
-    n = 4
-    m = 4
+    n = 8
+    m = 8
     x = np.linspace(xRange[0], xRange[1], n)
     y = np.linspace(yRange[0], yRange[1], m)
 
@@ -47,7 +47,7 @@ def main():
             BC[key] = value
     # Get spatial descritization based on Central differences in 2d
     A, psi = cf.getCentralDifferences(mesh, BC, DEBUG_PRINT=DEBUG_PRINT)
-    # print(A, psi)
+    print(A, psi)
     # for r in A:
     #     print(r)
     # print("a IS", A)
@@ -84,19 +84,40 @@ def main():
     # A = np.array([[52, 30, 49, 28], [30, 50, 8, 44], [49, 8, 46, 16], [28, 34, 16, 22]], dtype=np.float64)
     # a = np.array([[2,1], [1,2]])
     # print(A)
+    # a = np.array([[0, -1], [1, 0]])
+    # A2 = cf.getHessenBergForm(a)
+    # Q, R = cf.getQR(A2)
+    # eigenVals, eigenVecs = cf.getQREigens(np.dot(Q, R), cntMax=1e5)
+    # eVal, eigenVec = np.linalg.eig(A2)
+    # print("This")
+    # print("QR method")
+    # print(eigenVals, eigenVecs)
+    # print("should match")
+    # print(eVal, eigenVec)
+    # eVal1, eVec1 = cf.getEigenVectors(A)
+    
     A2 = cf.getHessenBergForm(A)
     Q, R = cf.getQR(A2)
     eigenVals, eigenVecs = cf.getQREigens(np.dot(Q, R), cntMax=1e5)
     eVal, eigenVec = np.linalg.eig(A2)
     print("This")
+    print("QR method")
     print(eigenVals, eigenVecs)
     print("should match")
     print(eVal, eigenVec)
+
+    '''
+    print("This")
+    print("Power method")
+    print(eVal1, eVec1)
+    print("should match")
+    print(eVal, eigenVec)
+    '''
     h = .001
     itterations = 1000
-    print(A, A2, A.shape)
+    # print(A, A2, A.shape)
 
-    print(eigenVecs[0])
+    # print(eigenVecs[0])
     """ Written by Michael Stein plots the probability
      of the real and complex part of the wavefunction for each point on a discretized grid
      onto a scatter plot """
