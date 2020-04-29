@@ -19,8 +19,8 @@ def main():
     yRange = [0, math.pi]
 
     # Descritize some points in space
-    n = 8
-    m = 8
+    n = 4
+    m = 4
     x = np.linspace(xRange[0], xRange[1], n)
     y = np.linspace(yRange[0], yRange[1], m)
 
@@ -145,7 +145,7 @@ def main():
         axes[1].scatter(x,y,c)
         camera.snap()
     animation = camera.animate()
-    animation.save('animation.mp4')
+    animation.save('animation' + str(n-2) + "x" + str(m-2) + '.mp4')
 
     # print("Q is", Q, "R is", R)
     # print("Q^-1AQ", np.dot(np.linalg.inv(Q), np.dot(np.dot(Q, R), Q)))
