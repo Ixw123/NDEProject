@@ -4,21 +4,80 @@ import matplotlib.pyplot as plt
 import scipy.linalg as la
 
 import Model.WaveFunction as mwf
+
+# Micah Church
+# Use np.linalg.eig(A) to compare computed QR with pythons implementation
+def calculateEigenError(eVal, eVec, A):
+    # Calculate eigens with numpy
+    eigenVal, eigenVec = np.linalg.eig(A)
+    # Need to sort eVal and eVec to ensure they line up
+    # create array of inds
+    counts = np.arange(eVal.shape[0])
+    print("counts", counts)
+    # Concat the counts to the eVals
+    countEval = np.stack([eVal, counts], axis=0)
+    cEigenVal = np.stack([eigenVal, counts], axis=0)
+    print("countEval", countEval)
+    print("cEigenVal", cEigenVal)
+    # Containers for ordered eigenValues
+    orderedEval = np.sort(countEval, axis=1)
+    npOrderedEval = np.sort(cEigenVal, axis=1)
+    print("orderedEval", orderedEval)
+    print("npOrderedEval", npOrderedEval)
+    # Containers for ordered eigenVectors
+    orderedEvec = np.zeros(eVec.shape)
+    npOrderedEvec = np.zeros(eigenVec.shape)
+    # Loop through all ordered eigen values
+    for i in range(orderedEval.shape[0]):
+        # Get the current eigenValue
+        currentEVal = orderedEval[i]
+        npCurrentEVal = npOrderedEval[i]
+        # Get the original index of the unordered eigenValue
+
+        if isinstance(currentEVal[1], np.complex):
+            index = int(np.real(currentEVal[1]))
+        else:
+            index = int(currentEVal[1])
+
+        if isinstance(npCurrentEVal[1], np.complex):
+            npIndex = int(np.real(npCurrentEVal[1]))
+        else:
+            npIndex = int(npCurrentEVal[1])
+        
+        print("index", index)
+        print("npIndex", npIndex)
+        orderedEvec[i] = eVec[index]
+        npOrderedEvec[i] = eigenVec[npIndex]
+
+    print(orderedEval, orderedEvec)
+    print("should line up with")
+    print(npOrderedEval, npOrderedEvec)
+    # Calculate the error of the eigen values and vectors assuming that numpys implementation is exact
+    eValError = np.abs(npOrderedEval - orderedEval)
+    eVecError = np.abs(npOrderedEvec - orderedEvec)
+
+    return eValError, eVecError
+
+# TODO verify that the complex variant works
 # Micah Church
 # Implemented from https://math.la.asu.edu/~gardner/QR.pdf
-
 # H = I - (2uu^T)/||u||_2^2
 def getHouseHolderMat(u):
+    #
     I = np.identity(u.shape[0], dtype=np.complex)
     u2norm = np.linalg.norm(u)
     
     return I - (2*(np.outer(u, u.T)))/u2norm**2
 
+# TODO: Check to see if always converting in getQR makes it converge quicker with minimal accuracy loss
+# TODO: URGENT Hessenberg is wrong
 def getHessenBergForm(A):
     # print(A)
     # Loop through each column
     for i in range(A.shape[0] - 2):
+        # print("i is", i)
         a = A[i, :].astype(np.complex)
+        # print("a", i, "is", a)
         # print(a)
         # get the magnitude of the a to make the u
         r = np.zeros(a.shape, dtype=np.complex)
@@ -26,13 +85,17 @@ def getHessenBergForm(A):
         # print(A[i+1][i+1:])
         # print(A[i+1:, 0])
         r[1] = np.linalg.norm(A[i+1:, 0])
+        # print("r", i, "is", r)
         # print("r", r)
         u = a - r
+        # print("u", i, "is", u)
         # print("u type", u.dtype)
         H = getHouseHolderMat(u)
+        # print("H", i, "is", H)
         # print("h type", H.dtype)
         # print(H)
         A = np.dot(np.dot(H, A), H)
+        # print("A", i, "is", A)
         # print(A)
         # R = np.dot(H, A)
         # print(np.dot(H, A))
@@ -42,6 +105,9 @@ def getHessenBergForm(A):
 # https://rpubs.com/aaronsc32/qr-decomposition-householder
 # https://math.la.asu.edu/~gardner/QR.pdf
 def getQR(A):
+    # Calculate the hessenberg form for each QR call to converge quicker
+    # TODO add back in later to converge quicker
+    # A = getHessenBergForm(A)
     # loop through the columns
     alpha = 1
     sign = 1 if A[0,0] > 0 else -1 
