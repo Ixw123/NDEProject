@@ -19,8 +19,8 @@ def main():
     yRange = [0, math.pi]
 
     # Descritize some points in space
-    n = 4
-    m = 4
+    n = 7
+    m = 5
     x = np.linspace(xRange[0], xRange[1], n)
     y = np.linspace(yRange[0], yRange[1], m)
 
@@ -98,7 +98,7 @@ def main():
     # a = np.array([[1,0,1], [0,1,2], [1,2,0]])
     # a = cf.getHessenBergForm(a)
     # print(a)
-    # A2 = cf.getHessenBergForm(A)
+    A2 = cf.getHessenBergForm(A)
     # Get the first decomposition of a into QR
     # Q, R = cf.getQR(A)
     eigenVals, eigenVecs = cf.getQREigens(A, cntMax=1e5)
@@ -123,27 +123,44 @@ def main():
     print(eVal, eigenVec)
     '''
     h = .001
-    itterations = 1000
-    # print(A, A2, A.shape)
+
+    iterations = 1000
+    print(A, A2, A.shape)
 
     # print(eigenVecs[0])
     """ Written by Michael Stein plots the probability
      of the real and complex part of the wavefunction for each point on a discretized grid
      onto a scatter plot """
     print("Entering Animation")
-    (AnimateR,AnimateC) = mt.rungeKutta(A, eigenVecs[0], h, itterations)
+    (AnimateR,AnimateC) = mt.rungeKutta(A, eigenVecs[0], h, iterations)
+
+    z = np.linspace(0,1,iterations+1);
     print("Exited Animation")
     print(len(AnimateR))
     print(len(AnimateC))
-
-    fig,axes = plt.subplots(2)
-    camera = Camera(fig)
-    x = []
-    y = []
+    fig,axs = plt.subplots(2,1)
+    def realGraph(i):
+        return [row[i] for row in AnimateR]
+    def compGraph(i):
+        return [row[i] for row in AnimateC]
+    v=0
+    axs[0].set_title("Real Component")
+    axs[1].set_title("Complex Component")
+    plt.subplots_adjust(hspace=.4)
     for i in range(n-2):
         for j in range(m-2):
-            x.append(i)
-            y.append(j)
+            list = realGraph(v)
+            list2 = compGraph(v)
+            axs[0].plot(z,list)
+
+            axs[1].plot(z,list2)
+            v = v+1
+
+    plt.savefig("Attempt.png")
+    plt.clf()
+    """
+    x = []
+    y = []
     for i in range(len(AnimateR)):
         b=AnimateR[i]
         b = [abs(element) * 150 for element in b] #unsure how big to make the points.
@@ -154,7 +171,8 @@ def main():
         axes[1].scatter(x,y,c)
         camera.snap()
     animation = camera.animate()
-    animation.save('animation' + str(n-2) + "x" + str(m-2) + '.mp4')
+    animation.save('animation.mp4')
+    """
 
     # print("Q is", Q, "R is", R)
     # print("Q^-1AQ", np.dot(np.linalg.inv(Q), np.dot(np.dot(Q, R), Q)))
